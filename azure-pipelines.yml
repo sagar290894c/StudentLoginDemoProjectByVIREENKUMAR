@@ -1,8 +1,9 @@
 # from last file change one option that is vmImage to Default and add down one more stage for SSH
-trigger: none
+trigger:
+- master
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: Default
 
 stages:
   - stage: dev
