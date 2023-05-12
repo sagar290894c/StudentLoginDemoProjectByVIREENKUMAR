@@ -1,0 +1,64 @@
+# from last file change one option that is vmImage to Default and add down one more stage for SSH
+trigger: none
+
+pool:
+  vmImage: Default
+
+stages:
+  - stage: dev
+    jobs:
+      - job: gitcode
+        steps:
+          - checkout: self
+  - stage: 'Build'
+    jobs:
+      - job: 'BuildJob'
+        steps:
+        - task: Maven@4
+          inputs:
+           mavenPomFile: 'pom.xml'
+           goals: 'install'
+           publishJUnitResults: true
+           testResultsFiles: '**/surefire-reports/TEST-*.xml'
+           javaHomeOption: 'JDKVersion'
+           mavenVersionOption: 'Default'
+           mavenAuthenticateFeed: false
+           effectivePomSkip: false
+           sonarQubeRunAnalysis: false
+  - stage: 'stage2'
+    jobs:
+      - job: 'job2'
+        steps:
+        - task: PublishPipelineArtifact@1
+          inputs:
+           targetPath: '$(Pipeline.Workspace)'
+           artifact: 'myartifact'
+           publishLocation: 'pipeline'
+  - stage: 'DownloadArtifact'
+    jobs:
+      - deployment: Deploy
+        environment: Stage
+        strategy:
+         runOnce:
+            deploy:
+               steps:
+                - task: DownloadPipelineArtifact@2
+                  inputs:
+                   buildType: 'specific'
+                   project: '581bfcb8-6aa8-4d5d-a1fb-1e3a486469d7'
+                   definition: '62'
+                   specificBuildWithTriggering: true
+                   buildVersionToDownload: 'latest'
+                   artifactName: 'myartifact'
+                   targetPath: '$(Pipeline.Workspace)'
+  - stage: 'Deploy with SSH'
+    jobs:
+      - job: 'DeployOverSSH'
+        steps:
+          - task: SSH@0
+            inputs:
+             sshEndpoint: 'TomcatServiceConnectionForAzurePipelines'
+             runOptions: 'inline'
+             inline: |
+                    echo 'Hello'
+                    sudo cp /opt/myagent/_work/1/s/target/StudentLoginForm.war /opt/tomcat/webapps
