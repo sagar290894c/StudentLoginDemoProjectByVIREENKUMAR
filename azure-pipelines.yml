@@ -51,7 +51,7 @@ stages:
                    buildVersionToDownload: 'latest'
                    artifactName: 'myartifact'
                    targetPath: '$(Pipeline.Workspace)'
-  - stage: 'Deploy with SSH'
+  - stage: 'DeployWithSSH'
     jobs:
       - job: 'DeployOverSSH'
         steps:
